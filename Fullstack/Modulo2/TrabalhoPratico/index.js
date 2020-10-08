@@ -16,7 +16,7 @@ console.log('Exercicio 2:');
 //printStatesWithMoreCities();
 
 // Exercicio 4
-//printStatesWithLessCities();
+printStatesWithLessCities();
 
 // Exercicio 5
 //printCitiesLongNameByStates();
@@ -25,7 +25,10 @@ console.log('Exercicio 2:');
 //printCitiesShortNameByStates();
 
 // Exercicio 7
-printCityBiggerName();
+//printCityBiggerName();
+
+// Exercicio 8
+printCityShortName();
 
 async function readAndWriteJsonFile() {
   try {
@@ -79,6 +82,7 @@ async function printStatesWithMoreCities() {
     }, 0);
     console.log('Exercicio 3 (Estados com mais cidades):');
     console.log(statesMoreCities);
+    console.log(total);
     return statesMoreCities;
   } catch (err) {
     console.log(err);
@@ -105,6 +109,7 @@ async function printStatesWithLessCities() {
     }, 0);
     console.log('Exercicio 4 (Estados com menos cidades):');
     console.log(statesMoreCities);
+    console.log(total);
     return statesMoreCities;
   } catch (err) {
     console.log(err);
@@ -116,6 +121,11 @@ async function printCitiesLongNameByStates() {
   try {
     estados = JSON.parse(await fs.readFile('Estados.json'));
     console.log('Exercicio 5:');
+    estados = estados.sort(function (uf1, uf2) {
+      if (uf1.Sigla > uf2.Sigla) return 1;
+      if (uf1.Sigla < uf2.Sigla) return -1;
+    });
+
     estados.map(async (UF) => {
       let fileName = './arquivos/' + UF.Sigla + '.json';
       const cidades = JSON.parse(await fs.readFile(fileName));
@@ -145,25 +155,31 @@ async function printCitiesShortNameByStates() {
 
 async function printCityBiggerName() {
   try {
-    estados = JSON.parse(await fs.readFile('Estados.json'));
-    console.log('Exercicio 7:');
-    var cities = estados.map(async (UF) => {
-      let fileName = './arquivos/' + UF.Sigla + '.json';
-      const cidades = JSON.parse(await fs.readFile(fileName));
-      var city = getCityGreaterNameLength(cidades, UF.Sigla);
-      return city;
+    cidades = JSON.parse(await fs.readFile('Cidades.json'));
+    cidades = cidades.sort(function (cityA, cityB) {
+      if (cityA.Nome.length > cityB.Nome.length) return -1;
+      if (cityA.Nome.length < cityB.Nome.length) return 1;
+      if (cityA.Nome > cityB.Nome) return 1;
+      if (cityA.Nome < cityB.Nome) return -1;
     });
-    cities = await Promise.all(cities);
-    cities = cities.sort(function (city1, city2) {
-      if (city1.nameLenght < city2.nameLenght) return 1;
-      if (city1.nameLenght > city2.nameLenght) return -1;
-      if (city1.Nome > city2.Nome) return 1;
-      if (city1.Nome < city2.Nome) return -1;
+    const city = cidades.slice(0, 1)[0];
+    console.log(city.Nome + '-' + (await getSiglaUFByID(city.Estado)));
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function printCityShortName() {
+  try {
+    cidades = JSON.parse(await fs.readFile('Cidades.json'));
+    cidades = cidades.sort(function (cityA, cityB) {
+      if (cityA.Nome.length < cityB.Nome.length) return -1;
+      if (cityA.Nome.length > cityB.Nome.length) return 1;
+      if (cityA.Nome > cityB.Nome) return 1;
+      if (cityA.Nome < cityB.Nome) return -1;
     });
-    const greatherCity = cities.slice(0, 1).map((city) => {
-      return city[0];
-    });
-    console.log(greatherCity);
+    const city = cidades.slice(0, 1)[0];
+    console.log(city.Nome + '-' + (await getSiglaUFByID(city.Estado)));
   } catch (err) {
     console.log(err);
   }
@@ -186,6 +202,15 @@ async function getCityGreaterNameLength(cities, uf) {
   });
 
   return greatherCity;
+}
+
+async function getSiglaUFByID(idUF) {
+  estados = JSON.parse(await fs.readFile('Estados.json'));
+  estados = await Promise.all(estados);
+
+  var estado = estados.filter((estado) => estado.ID === idUF);
+
+  return estado[0].Sigla;
 }
 
 async function getCityShortNameLength(cities, uf) {
